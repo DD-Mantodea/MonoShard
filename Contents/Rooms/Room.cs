@@ -134,6 +134,8 @@ namespace MonoShard.Contents.Rooms
                 LocalPlayer.LastTilePos = MouseTile;
 
                 LocalPlayer.TargetTilePos = MouseTile;
+
+                LocalPlayer.Rotation = 0f;
             }
         }
 

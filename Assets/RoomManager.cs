@@ -2,66 +2,82 @@
 using Mantodea.Assets;
 using Mantodea.Contents.Extensions;
 using MonoShard.Contents.GameObjects;
+using MonoShard.Contents.GameObjects.Stuffs;
 using MonoShard.Contents.Rooms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace MonoShard.Assets
 {
     public class RoomManager : AssetManager<Room>
     {
-        public Dictionary<string, Room> Rooms = [];
+        public ConcurrentDictionary<string, Room> Rooms = [];
 
-        public override void LoadOne(string dir, Dictionary<string, Room> dictronary)
+        public override void LoadOne(string dir, ConcurrentDictionary<string, Room> dictronary)
         {
             var path = Path.Combine(Pathes.ContentPath, dir);
 
             if (Directory.Exists(path))
             {
-                foreach (var file in Directory.GetFiles(path, "*.json", SearchOption.AllDirectories))
+                var jsonFiles = Directory.GetFiles(path, "*.json", SearchOption.AllDirectories);
+
+                Parallel.ForEach(jsonFiles, file =>
                 {
-                    var room = new Room();
+                    var jsonData = Task.Run(() => File.ReadAllText(file)).Result;
 
-                    var data = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(file));
+                    var data = JsonConvert.DeserializeObject<JObject>(jsonData);
 
-                    room.Background = StoneShard.TextureManager.Sprites[data["Background"].ToString()].GetClone();
+                    var room = new Room
+                    {
+                        Background = StoneShard.TextureManager.Sprites[data["Background"].ToString()].GetClone(),
 
-                    room.Collision = data["Collision"].ToObject<int[,]>();
+                        Collision = data["Collision"].ToObject<int[,]>()
+                    };
 
                     room.TileWidth = room.Collision.GetLength(0);
-
                     room.TileHeight = room.Collision.GetLength(1);
 
-                    foreach (var obj in data["Barriers"])
+                    if (data["Barriers"] != null)
                     {
-                        var barrier = new Barrier(room)
+                        foreach (var obj in data["Barriers"])
                         {
-                            Position = new((int)obj["X"] * 2, (int)obj["Y"] * 2),
-                            Texture = TextureManager.GetSprite(obj["Sprite"].ToString()),
-                        };
+                            var barrier = new Barrier(room, 0)
+                            {
+                                Position = new((int)obj["X"] * 2, (int)obj["Y"] * 2),
+                                Texture = TextureManager.GetSprite(obj["Sprite"].ToString()),
+                            };
 
-                        barrier.Texture.Frame = obj["ImageIndex"].ToObject<int>();
-
-                        room.RoomObjects.Add(barrier);
+                            barrier.Texture.Frame = obj["ImageIndex"].ToObject<int>();
+                            room.RoomObjects.Add(barrier);
+                        }
                     }
 
-                    foreach (var fore in data["Foregrounds"])
+                    if (data["Foregrounds"] != null)
                     {
-                        var transparentFore = new Foreground(room)
+                        foreach (var fore in data["Foregrounds"])
                         {
-                            Position = new((int)fore["X"] * 2, (int)fore["Y"] * 2),
-                            Texture = TextureManager.GetSprite(fore["Sprite"].ToString()),
-                        };
+                            var transparentFore = new Foreground(room)
+                            {
+                                Position = new((int)fore["X"] * 2, (int)fore["Y"] * 2),
+                                Texture = TextureManager.GetSprite(fore["Sprite"].ToString()),
+                            };
 
-                        transparentFore.Texture.Frame = fore["ImageIndex"].ToObject<int>();
-
-                        room.RoomObjects.Add(transparentFore);
+                            transparentFore.Texture.Frame = fore["ImageIndex"].ToObject<int>();
+                            room.RoomObjects.Add(transparentFore);
+                        }
                     }
 
-                    dictronary.Add(Path.GetFileNameWithoutExtension(file), room);
-                }
+                    lock (dictronary)
+                    {
+                        var fileName = Path.GetFileNameWithoutExtension(file);
+
+                        dictronary.TryAdd(fileName, room);
+                    }
+                });
             }
         }
 

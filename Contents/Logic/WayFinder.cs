@@ -57,6 +57,7 @@ namespace MonoShard.Contents.Logic
                 .Where(item => openSet.Contains(item.Key))
                 .OrderBy(item => item.Value)
                 .First().Key;
+
                 if (current == _end)
                 {
                     return ReconstructPath(parent, current);
@@ -106,15 +107,22 @@ namespace MonoShard.Contents.Logic
         private List<Vector2> ReconstructPath(Dictionary<Vector2, Vector2> cameFrom, Vector2 goal)
         {
             Vector2 current = goal;
+
             var totalPath = new List<Vector2> { goal };
+
             while (cameFrom.ContainsKey(current))
             {
                 Vector2 old = current;
+
                 current = cameFrom[current];
+
                 totalPath.Insert(0, current);
+
                 cameFrom.Remove(old);
             }
+
             totalPath.RemoveAt(0);
+
             return totalPath;
         }
     }

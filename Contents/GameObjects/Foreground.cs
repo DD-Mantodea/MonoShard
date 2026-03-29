@@ -9,16 +9,13 @@ using System.Threading.Tasks;
 
 namespace MonoShard.Contents.GameObjects
 {
-    public class Foreground : RoomObject
+    public class Foreground(Room room) : RoomObject(room)
     {
-        public Foreground(Room room) : base(room)
-        {
-            Alpha = 79f / 255;
-        }
-
         public override int Height => Texture.Height;
 
         public override int Width => Texture.Width;
+
+        public override float Alpha => 79f / 255;
 
         public override float ZIndex => 1 - (Position.Y + Height - 1) / 1000 / StoneShard.TileSize;
     }

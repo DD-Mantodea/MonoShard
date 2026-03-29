@@ -21,8 +21,6 @@ namespace MonoShard.Contents.GameObjects.TileMapObjects.Entities
         {
             Timer = new();
 
-            CurrentPath = [];
-
             Direction = -1;
 
             _offsets = [new(-1, -1), new(-1, 0), new(0, 1), new(1, 0), new(1, -1), new(1, 0), new(0, 1), new(-1, 0)];
@@ -31,7 +29,7 @@ namespace MonoShard.Contents.GameObjects.TileMapObjects.Entities
 
             Shadow = TextureManager.GetSprite("s_shadow_small");
 
-            Target = TextureManager.GetSprite("s_highlight").RemoveOffset();
+            Target = TextureManager.GetSprite("s_highlight");
 
             WayPoint = TextureManager.GetSprite("s_waypoint");
         }
@@ -68,24 +66,14 @@ namespace MonoShard.Contents.GameObjects.TileMapObjects.Entities
 
         public override int Width => 40;
 
-        public override int Height => 80 / 3;
+        public override int Height => 68;
 
-        public override Vector2 Position => base.Position + new Vector2(StoneShard.TileSize) / 2;
-
-        public override Rectangle Rectangle => RectangleUtils.FromVector2(Position - new Vector2(StoneShard.TileSize) / 2, new(Width, Height));
+        public override Rectangle Rectangle => RectangleUtils.FromVector2(Position.Add(4, -34) + DrawOffset, new(Width, Height));
 
         public override void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
-            spriteBatch.Draw(Shadow, Position.Add(-2, 8), Color.Black * 0.4f, layerDepth: 1 - TilePosition.Y / 1000 + 0.0003f);
+            DrawBody(spriteBatch, gameTime);
 
-            spriteBatch.DrawRectangle(Rectangle, Color.Red, layerDepth: 1 - TilePosition.Y / 1000 + 0.0003f);
-
-            spriteBatch.Draw(Body, Position.Sub(6 + 2 * Direction, 2) + DrawOffset, Color.White,
-                Rotation, Vector2.Zero, Vector2.One, Direction == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 1 - TilePosition.Y / 1000 + 0.0002f);
-
-            spriteBatch.Draw(HeadNormal, Position.Sub(3 - Direction, 2) + DrawOffset, Color.White,
-                Rotation, Vector2.Zero, Vector2.One, Direction == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 1 - TilePosition.Y / 1000 + 0.0001f);
-        
             if (DrawSelectBox)
             {
                 if (Room.Reachable(Room.MouseTile))
@@ -93,16 +81,19 @@ namespace MonoShard.Contents.GameObjects.TileMapObjects.Entities
                 else
                     Target.Frame = 1;
 
-                spriteBatch.Draw(Target, (Room.MouseTile * 2 / 3 + Room.PreviousMouseTile / 3 + Room.TilePosition) * StoneShard.TileSize - new Vector2(2, 0), Color.White, layerDepth: 0);
+                spriteBatch.Draw(Target, (Room.MouseTile * 2 / 3 + Room.PreviousMouseTile / 3 + Room.TilePosition) * StoneShard.TileSize - new Vector2(2, 2), Color.White, layerDepth: 0);
             }
 
             if (DrawPath)
             {
                 foreach (var item in CurrentPath)
                 {
-                    var scale = new Vector2((float)(0.7 + Math.Cos(gameTime.TotalGameTime.TotalMilliseconds / 200 + CurrentPath.IndexOf(item)) / 6));
+                    if (CurrentPath.IndexOf(item) <= PathIndex)
+                        continue;
 
-                    var offset = new Vector2(StoneShard.TileSize - 10 * scale.X) / 2;
+                    var scale = new Vector2((float)(0.9 + Math.Cos(gameTime.TotalGameTime.TotalMilliseconds / 200 + CurrentPath.IndexOf(item)) / 5));
+
+                    var offset = new Vector2(StoneShard.TileSize) / 2 + (scale.X - 0.9f) * new Vector2(10) - new Vector2(2);
 
                     var waypointPos = item + Room.TilePosition;
 
@@ -110,34 +101,47 @@ namespace MonoShard.Contents.GameObjects.TileMapObjects.Entities
                     {
                         if (Vector2.Distance(item, TargetTilePos) == 1)
                         {
-                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, scale: scale, layerDepth: 0.001f);
-                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset, Color.White, 0, Vector2.Zero, scale: scale, layerDepth: 0);
+                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, origin: new Vector2(16, 14), scale: scale, layerDepth: 0.001f);
+                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset, Color.White, origin: new Vector2(16, 14), scale: scale, layerDepth: 0);
                         }
                         else
                         {
-                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, scale: scale, layerDepth: 0.001f);
-                            spriteBatch.Draw(WayPoint, (waypointPos + (TargetTilePos - item) / 2) * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, scale: scale, layerDepth: 0.001f);
-                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset, Color.White, scale: scale, layerDepth: 0);
-                            spriteBatch.Draw(WayPoint, (waypointPos + (TargetTilePos - item) / 2) * StoneShard.TileSize + offset, Color.White, scale: scale, layerDepth: 0);
+                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, origin: new Vector2(16, 14), scale: scale, layerDepth: 0.001f);
+                            spriteBatch.Draw(WayPoint, (waypointPos + (TargetTilePos - item) / 2) * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, origin: new Vector2(16, 14), scale: scale, layerDepth: 0.001f);
+                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset, Color.White, origin: new Vector2(16, 14), scale: scale, layerDepth: 0);
+                            spriteBatch.Draw(WayPoint, (waypointPos + (TargetTilePos - item) / 2) * StoneShard.TileSize + offset, Color.White, origin: new Vector2(16, 14), scale: scale, layerDepth: 0);
                         }
                     }
                     else
                     {
                         if (Vector2.Distance(item, CurrentPath[CurrentPath.IndexOf(item) - 1]) == 1)
                         {
-                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, scale: scale, layerDepth: 0.001f);
-                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset, Color.White, scale: scale, layerDepth: 0);
+                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, origin: new Vector2(16, 14), scale: scale, layerDepth: 0.001f);
+                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset, Color.White, origin: new Vector2(16, 14), scale: scale, layerDepth: 0);
                         }
                         else
                         {
-                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, scale: scale, layerDepth: 0.001f);
-                            spriteBatch.Draw(WayPoint, (waypointPos + (CurrentPath[CurrentPath.IndexOf(item) - 1] - item) / 2) * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, scale: scale, layerDepth: 0.001f);
-                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset, Color.White, 0, Vector2.Zero, scale: scale, layerDepth: 0);
-                            spriteBatch.Draw(WayPoint, (waypointPos + (CurrentPath[CurrentPath.IndexOf(item) - 1] - item) / 2) * StoneShard.TileSize + offset, Color.White, scale: scale, layerDepth: 0);
+                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, origin: new Vector2(16, 14), scale: scale, layerDepth: 0.001f);
+                            spriteBatch.Draw(WayPoint, (waypointPos + (CurrentPath[CurrentPath.IndexOf(item) - 1] - item) / 2) * StoneShard.TileSize + offset + new Vector2(2, 2), Color.Black, origin: new Vector2(16, 14), scale: scale, layerDepth: 0.001f);
+                            spriteBatch.Draw(WayPoint, waypointPos * StoneShard.TileSize + offset, Color.White, origin: new Vector2(16, 14), scale: scale, layerDepth: 0);
+                            spriteBatch.Draw(WayPoint, (waypointPos + (CurrentPath[CurrentPath.IndexOf(item) - 1] - item) / 2) * StoneShard.TileSize + offset, Color.White, origin: new Vector2(16, 14), scale: scale, layerDepth: 0);
                         }
                     }
                 }
             }
+        }
+
+        public virtual void DrawBody(SpriteBatch spriteBatch, GameTime gameTime)
+        {
+            var drawPos = Position + new Vector2(StoneShard.TileSize) / 2;
+
+            spriteBatch.Draw(Shadow, drawPos.Add(-2, 8), Color.Black * 0.4f, origin: Shadow.Origin, layerDepth: 1 - TilePosition.Y / 1000 + 0.0003f);
+
+            spriteBatch.Draw(Body, drawPos.Sub(6 + 2 * Direction, 2) + DrawOffset, Color.White,
+                Rotation, Body.Origin, Vector2.One, Direction == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 1 - TilePosition.Y / 1000 + 0.0002f);
+
+            spriteBatch.Draw(HeadNormal, drawPos.Sub(3 - Direction, 2) + DrawOffset, Color.White,
+                Rotation, HeadNormal.Origin, Vector2.One, Direction == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 1 - TilePosition.Y / 1000 + 0.0001f);
         }
 
         public override void Update(GameTime gameTime)
@@ -146,17 +150,17 @@ namespace MonoShard.Contents.GameObjects.TileMapObjects.Entities
 
             UpdateSprite(gameTime);
 
-            var wayfinder = new WayFinder(Room.Reachable, TilePosition, Room.MouseTile, Room);
-
             if (!IsMove)
             {
                 if (Room.Reachable(Room.MouseTile))
+                {
+                    var wayfinder = new WayFinder(Room.Reachable, TilePosition, Room.MouseTile, Room);
+
                     CurrentPath = wayfinder.FindPath();
+                }
                 else 
                     CurrentPath?.Clear();
             }
-
-            CurrentAnimation?.Update(gameTime);
         }
 
         public void UpdateSprite(GameTime gameTime)

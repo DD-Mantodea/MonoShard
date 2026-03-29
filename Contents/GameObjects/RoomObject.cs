@@ -25,7 +25,7 @@ namespace MonoShard.Contents.GameObjects
 
         public override void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
-            spriteBatch.Draw(Texture, Position + Room.Position, Color.White * Alpha, layerDepth: ZIndex);
+            spriteBatch.Draw(Texture, Position + Room.Position, Color.White * Alpha, origin: Texture.Origin, layerDepth: ZIndex);
         }
     }
 }

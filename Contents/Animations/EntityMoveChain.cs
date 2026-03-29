@@ -21,6 +21,8 @@ namespace MonoShard.Contents.Animations
 
                 Target.IsMove = false;
 
+                Target.PathIndex = -1;
+
                 return;
             }
 
@@ -28,8 +30,7 @@ namespace MonoShard.Contents.Animations
 
             if (!animation.Initialized)
             {
-                if (Target.CurrentPath.Count > 0) 
-                    Target.CurrentPath.RemoveAt(0);
+                Target.PathIndex = _animationIndex;
 
                 Target.LastTilePos = (animation as EntityMoveAnimation).StartPos;
                 
@@ -48,6 +49,8 @@ namespace MonoShard.Contents.Animations
                     MaxTime = 0;
 
                     Target.IsMove = false;
+
+                    Target.PathIndex = -1;
 
                     return;
                 }

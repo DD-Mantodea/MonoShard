@@ -6,6 +6,7 @@ using MonoShard.Assets;
 using MonoShard.Contents.GameObjects.TileMapObjects.Entities;
 using MonoShard.Contents.GameObjects.TileMapObjects.Entities.Players;
 using MonoShard.Contents.Scenes;
+using System.Threading.Tasks;
 
 namespace MonoShard
 {
@@ -21,6 +22,8 @@ namespace MonoShard
 
             RoomManager = new();
 
+            FontManager = new();
+
             GameScene = new();
         }
 
@@ -30,21 +33,32 @@ namespace MonoShard
 
         public static RoomManager RoomManager;
 
+        public static FontManager FontManager;
+
         public static GameScene GameScene;
 
-        protected override void Initialize()
-        {
-            TextureManager.Load();
+        public bool AssetLoaded = false;
 
-            RoomManager.Load();
+        protected async override void Initialize()
+        {
+            base.Initialize();
+
+            await Task.Run(async () =>
+            {
+                await TextureManager.Load();
+
+                await RoomManager.Load();
+
+                await FontManager.Load();
+
+                AssetLoaded = true;
+            });
 
             GameScene.CurrentRoom = RoomManager["r_taverninside1floor"];
 
             Player.LocalPlayer = new Jonna(GameScene.CurrentRoom);
 
             Player.LocalPlayer.GoToRoom(GameScene.CurrentRoom, new(6, 11));
-
-            base.Initialize();
         }
 
         protected override void Draw(GameTime gameTime)
@@ -53,7 +67,8 @@ namespace MonoShard
 
             SpriteBatch.Begin(samplerState: SamplerState.PointClamp, rasterizerState: RasterizerState.CullNone, sortMode: SpriteSortMode.BackToFront);
 
-            GameScene.Draw(SpriteBatch, gameTime);
+            if (AssetLoaded)
+                GameScene.Draw(SpriteBatch, gameTime);
 
             SpriteBatch.End();
         }
@@ -64,12 +79,12 @@ namespace MonoShard
 
             GameScene.Update(gameTime);
         }
+    }
 
-        public class GameColors
-        {
-            public static Color UIDark = new(6, 0, 16);
+    public class GameColors
+    {
+        public static Color UIDark = new(6, 0, 16);
 
-            public static Color RoomDark = new(17, 16, 26);
-        }
+        public static Color RoomDark = new(17, 16, 26);
     }
 }
