@@ -11,6 +11,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Assets\RoomManager.cs~RF3320e4c6.TMP" />
     <None Remove="Contents\GameObjects\Stuffs\Carpet.cs~RFa59eb26.TMP" />
     <None Remove="Contents\GameObjects\TileMapObject.cs~RF2be2ce5.TMP" />
     <None Remove="Icon.ico" />
@@ -34,9 +35,6 @@
     <Reference Include="Mantodea">
       <HintPath>..\Mantodea\bin\Debug\net8.0\Mantodea.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Contents\Rooms\Osbrook\" />
   </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="CollectPackageReferences">
     <Message Text="Restoring dotnet tools (this might take a while depending on your internet speed and should only happen upon building your project for the first time, or after upgrading MonoGame, or clearing your nuget cache)" Importance="High" />

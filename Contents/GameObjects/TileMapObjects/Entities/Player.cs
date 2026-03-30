@@ -135,13 +135,13 @@ namespace MonoShard.Contents.GameObjects.TileMapObjects.Entities
         {
             var drawPos = Position + new Vector2(StoneShard.TileSize) / 2;
 
-            spriteBatch.Draw(Shadow, drawPos.Add(-2, 8), Color.Black * 0.4f, origin: Shadow.Origin, layerDepth: 1 - TilePosition.Y / 1000 + 0.0003f);
+            spriteBatch.Draw(Shadow, drawPos.Add(-2, 8), Color.Black * 0.4f, origin: Shadow.Origin, layerDepth: 1 - TilePosition.Y / 1000 - 0.0007f);
 
             spriteBatch.Draw(Body, drawPos.Sub(6 + 2 * Direction, 2) + DrawOffset, Color.White,
-                Rotation, Body.Origin, Vector2.One, Direction == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 1 - TilePosition.Y / 1000 + 0.0002f);
+                Rotation, Body.Origin, Vector2.One, Direction == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 1 - TilePosition.Y / 1000 - 0.0008f);
 
             spriteBatch.Draw(HeadNormal, drawPos.Sub(3 - Direction, 2) + DrawOffset, Color.White,
-                Rotation, HeadNormal.Origin, Vector2.One, Direction == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 1 - TilePosition.Y / 1000 + 0.0001f);
+                Rotation, HeadNormal.Origin, Vector2.One, Direction == -1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 1 - TilePosition.Y / 1000 - 0.0009f);
         }
 
         public override void Update(GameTime gameTime)

@@ -1,11 +1,12 @@
 ﻿using Mantodea;
 using Mantodea.Assets;
-using Mantodea.Contents.Extensions;
+using Microsoft.Xna.Framework.Graphics;
 using MonoShard.Contents.GameObjects;
 using MonoShard.Contents.GameObjects.Stuffs;
 using MonoShard.Contents.Rooms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -41,26 +42,54 @@ namespace MonoShard.Assets
                     room.TileWidth = room.Collision.GetLength(0);
                     room.TileHeight = room.Collision.GetLength(1);
 
-                    if (data["Barriers"] != null)
+                    if (data["Stuffs"] != null)
                     {
-                        foreach (var obj in data["Barriers"])
+                        foreach (var obj in data["Stuffs"])
                         {
-                            var barrier = new Barrier(room, 0)
-                            {
-                                Position = new((int)obj["X"] * 2, (int)obj["Y"] * 2),
-                                Texture = TextureManager.GetSprite(obj["Sprite"].ToString()),
-                            };
+                            Stuff stuff = null;
 
-                            barrier.Texture.Frame = obj["ImageIndex"].ToObject<int>();
-                            room.RoomObjects.Add(barrier);
+                            foreach (var pair in Stuff.StuffFactories)
+                            {
+                                if (pair.Key.IsMatch(obj["Sprite"].ToString()))
+                                {
+                                    stuff = pair.Value(room, 0);
+
+                                    break;
+                                }
+                            }
+
+                            stuff ??= new DefaultStuff(room, 0);
+
+                            stuff.Position = new((int)obj["X"] * 2, (int)obj["Y"] * 2);
+
+                            stuff.Texture = TextureManager.GetSprite(obj["Sprite"].ToString());
+
+                            stuff.Texture.Frame = obj["ImageIndex"].ToObject<int>();
+
+                            room.RoomObjects.Add(stuff);
                         }
                     }
 
-                    if (data["Foregrounds"] != null)
+                    if (data["TransparentForegrounds"] != null)
                     {
-                        foreach (var fore in data["Foregrounds"])
+                        foreach (var fore in data["TransparentForegrounds"])
                         {
-                            var transparentFore = new Foreground(room)
+                            var transparentFore = new TransparentForeground(room)
+                            {
+                                Position = new((int)fore["X"] * 2, (int)fore["Y"] * 2),
+                                Texture = TextureManager.GetSprite(fore["Sprite"].ToString()),
+                            };
+
+                            transparentFore.Texture.Frame = fore["ImageIndex"].ToObject<int>();
+                            room.RoomObjects.Add(transparentFore);
+                        }
+                    }
+
+                    if (data["OpaqueForegrounds"] != null)
+                    {
+                        foreach (var fore in data["OpaqueForegrounds"])
+                        {
+                            var transparentFore = new OpaqueForeground(room)
                             {
                                 Position = new((int)fore["X"] * 2, (int)fore["Y"] * 2),
                                 Texture = TextureManager.GetSprite(fore["Sprite"].ToString()),

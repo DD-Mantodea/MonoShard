@@ -3,9 +3,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoShard.Assets;
+using MonoShard.Contents.Attributes;
 using MonoShard.Contents.GameObjects.TileMapObjects.Entities;
 using MonoShard.Contents.GameObjects.TileMapObjects.Entities.Players;
 using MonoShard.Contents.Scenes;
+using System;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MonoShard
@@ -42,6 +46,21 @@ namespace MonoShard
         protected async override void Initialize()
         {
             base.Initialize();
+
+            foreach (var autoRegister in GetType().Assembly.GetTypes().Where(t => t.GetCustomAttribute<AutoRegisterAttribute>() != null))
+            {
+                if (autoRegister.IsAbstract)
+                    continue;
+
+                var instance = Activator.CreateInstance(autoRegister);
+
+                var register = autoRegister.GetMethod("Register");
+
+                if (register != null)
+                    register.Invoke(instance, []);
+                else
+                    throw new Exception($"AutoRegister class {autoRegister.Name} does not have a Register method.");
+            }
 
             await Task.Run(async () =>
             {

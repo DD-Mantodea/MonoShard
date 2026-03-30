@@ -78,7 +78,11 @@ namespace MonoShard.Contents.Rooms
 
         public override void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
-            spriteBatch.Draw(Background, Position, Color.White, layerDepth: 1);
+            spriteBatch.Rebegin(sortMode: SpriteSortMode.Deferred);
+
+            spriteBatch.Draw(Background, Position, Color.White);
+
+            spriteBatch.Rebegin(sortMode: SpriteSortMode.BackToFront);
 
             foreach (var obj in RoomObjects.Where(o => !o.UseAdditive))
                 obj.Draw(spriteBatch, gameTime);
